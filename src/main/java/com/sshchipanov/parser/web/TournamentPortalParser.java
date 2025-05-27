@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface TournamentPortalParser {
 
-    public List<TournamentRoster> parseRosters();
+    List<TournamentRoster> parseRosters();
 
 }

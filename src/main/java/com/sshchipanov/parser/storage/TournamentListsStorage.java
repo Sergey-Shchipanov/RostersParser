@@ -1,6 +1,5 @@
 package com.sshchipanov.parser.storage;
 
-import com.sshchipanov.parser.model.BCPRoster;
 import com.sshchipanov.parser.model.TournamentRoster;
 
 import java.util.List;

@@ -1,5 +1,8 @@
 package com.sshchipanov.parser.model;
 
+import lombok.Getter;
+
+@Getter
 public enum Faction {
     ADEPTA_SORORITAS("Adepta Sororitas"),
     ADEPTUS_CUSTODES("Adeptus Custodes"),
@@ -31,7 +34,4 @@ public enum Faction {
         this.displayName = displayName;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
 }

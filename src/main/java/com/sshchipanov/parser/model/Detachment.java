@@ -1,5 +1,8 @@
 package com.sshchipanov.parser.model;
 
+import lombok.Getter;
+
+@Getter
 public enum Detachment {
     // Adepta Sororitas
     HALLOWED_MARTYRS("Hallowed Martyrs"),
@@ -42,8 +45,5 @@ public enum Detachment {
         this.displayName = displayName;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
 }
 

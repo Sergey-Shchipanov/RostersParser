@@ -1,6 +1,5 @@
 package com.sshchipanov.parser.storage;
 
-import com.sshchipanov.parser.model.BCPRoster;
 import com.sshchipanov.parser.model.TournamentRoster;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
