@@ -1,14 +1,20 @@
-package com.sshchipanov.parser.parsing;
+package com.sshchipanov.parser;
 
+import com.microsoft.azure.functions.annotation.FunctionName;
+import com.microsoft.azure.functions.annotation.TimerTrigger;
 import com.sshchipanov.parser.model.BCPTournamentList;
 import com.sshchipanov.parser.storage.TournamentListsStorage;
 import com.sshchipanov.parser.web.TournamentPortalParser;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+
+import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Component
 public class RostersParsingTask {
 
@@ -21,9 +27,15 @@ public class RostersParsingTask {
         this.storage = storage;
     }
 
-    @Scheduled(fixedDelay = 100) // Adjust the interval as needed
     public void parseAndSaveRosters() {
         List<BCPTournamentList> rosters = portalParser.parseRosters();
         storage.saveLists(rosters);
+    }
+
+    @FunctionName("RostersParser")
+    public void timerHandler(
+            @TimerTrigger(name = "timerInfo", schedule = "*/10 * * * * *") String timerInfo){
+        log.info("Java Timer trigger function executed at: {}", LocalDateTime.now());
+        parseAndSaveRosters();
     }
 }

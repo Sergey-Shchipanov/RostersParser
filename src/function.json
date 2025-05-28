@@ -1,0 +1,12 @@
+{
+  "scriptFile": "../RostersParser-0.0.1-SNAPSHOT.jar",
+  "entryPoint": "com.sshchipanov.parser.parsing.RostersParsingTask.timerHandler",
+  "bindings": [
+    {
+      "type": "timerTrigger",
+      "direction": "in",
+      "name": "timerInfo",
+      "schedule": "*/10 * * * * *"
+    }
+  ]
+}
