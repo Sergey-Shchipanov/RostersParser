@@ -5,11 +5,14 @@ import lombok.Data;
 
 @AllArgsConstructor
 @Data
-public class TournamentRoster {
+public class BCPTournamentList {
 
     private Faction faction;
     private Detachment detachment;
     private String playerName;
-    private String roster;
+    private String bcpListUrl;
+    private String tournamentPath;
+    private int umberOfWins;
+    private String tournamentId;
 
 }

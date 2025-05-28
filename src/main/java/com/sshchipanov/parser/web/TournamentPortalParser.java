@@ -1,11 +1,11 @@
 package com.sshchipanov.parser.web;
 
-import com.sshchipanov.parser.model.TournamentRoster;
+import com.sshchipanov.parser.model.BCPTournamentList;
 
 import java.util.List;
 
 public interface TournamentPortalParser {
 
-    List<TournamentRoster> parseRosters();
+    List<BCPTournamentList> parseRosters();
 
 }
