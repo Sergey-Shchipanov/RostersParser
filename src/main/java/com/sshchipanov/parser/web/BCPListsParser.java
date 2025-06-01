@@ -1,44 +1,58 @@
 package com.sshchipanov.parser.web;
 
-import com.sshchipanov.parser.model.Detachment;
-import com.sshchipanov.parser.model.Faction;
 import com.sshchipanov.parser.model.BCPTournamentList;
+import com.sshchipanov.parser.model.Faction;
+import com.sshchipanov.parser.model.bcp.BCPResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
 @Slf4j
 public class BCPListsParser implements TournamentPortalParser {
 
+    public static final String LIST_URL_BASE = "https://www.bestcoastpairings.com/list/";
+    public static final String LISTS_URL_BASE = "https://newprod-api.bestcoastpairings.com/v1/tournaments";
     private String bcpListsUrl;
 
     @Override
-    public List<BCPTournamentList> parseRosters() {
-        log.info("Parsing BCP Lists url: {}", bcpListsUrl);
-        // TODO: Implement the actual parsing logic here.
+    public Flux<BCPTournamentList> parseRosters() {
+        log.info("Starting to parse rosters from BCP at URL: {}", LISTS_URL_BASE);
         String authenticationToken = getAuthenticationToken();
         log.info("Generated authentication token: {}", authenticationToken);
-        return getTournamentRosters(authenticationToken);
+        WebClient webClient = WebClient.builder().baseUrl(LISTS_URL_BASE).build();
+        Mono<BCPResponse> response = webClient.get().header("Authorization", "Bearer " + authenticationToken)
+                .attribute("limit", "100")
+                .attribute("startDate", "2025-05-24T21")
+                .attribute("endDate", "2025-06-01T21")
+                .attribute("gameType", "1")
+                .retrieve()
+                .onStatus(status -> status.value() != 200, clientResponse -> {
+                    log.error("Failed to retrieve data from BCP: {}", clientResponse.statusCode());
+                    return Mono.error(new RuntimeException("Failed to retrieve data from BCP"));
+                })
+                .bodyToMono(BCPResponse.class);
+
+        return convertResponseToEntites(response);
     }
 
-    private static List<BCPTournamentList> getTournamentRosters(String authenticationToken) {
-        log.info("Calling BCP API with authentication token: {}", authenticationToken);
-        return List.of(new BCPTournamentList(
-                Faction.ADEPTUS_CUSTODES,
-                Detachment.SOLAR_SPEARHEAD,
-                "Player1",
-                "https://bcp-url.com/list1",
-                "tournament-path-1",
-                3,
-                "tournament-id-1"
-        ));
+    private static Flux<BCPTournamentList> convertResponseToEntites(Mono<BCPResponse> response) {
+        return response.flatMapMany(bcpResponse -> Flux.fromIterable(bcpResponse.getData()))
+                .map(data -> new BCPTournamentList(Faction.valueOfDisplayName(data.getPlayer().getArmyName()),
+                        data.getPlayer().firstName + " " + data.getPlayer().getLastName(),
+                        LIST_URL_BASE + data.getPlayer().getArmyListObjectId(),
+                        data.getPlayer().getResultRecord(),
+                        data.getPlayer().getTotal_numWins(),
+                        data.getEventId()));
+
+
     }
 
 
     protected String getAuthenticationToken() {
-        return "dummy-auth-token";
+        return "eyJraWQiOiJqWDJMamZlWFRIakZhMkVXQW5DZVZFSERIdUFQR29QMUJqUFA1dHZQSlJzPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiIzNDQ4NDQ2OC1jMGIxLTcwZmMtMDJhZS1lOWNlZjlkNTJiZjYiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV95cHY1bTgyd3ciLCJjbGllbnRfaWQiOiI1MDgzaWloMG5pdHBuNWVubDAyZmtwcjliYyIsIm9yaWdpbl9qdGkiOiI1OGU1ZjgyMS05ZTZhLTQ5NzUtODhkMi1mMDIzMzZlNWJkMzIiLCJldmVudF9pZCI6IjhmNzRmYTBjLTllZWEtNDM2Zi1hOGVkLTc1NzVlNDZkODMzZiIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE3NDg3NjUyMDQsImV4cCI6MTc0ODc2ODgwNSwiaWF0IjoxNzQ4NzY1MjA1LCJqdGkiOiI2MTdlOWM3OS0xZTlkLTQ3MjItYTJkYi1kNzI0MjA5N2M2ZjAiLCJ1c2VybmFtZSI6IjM0NDg0NDY4LWMwYjEtNzBmYy0wMmFlLWU5Y2VmOWQ1MmJmNiJ9.mtZ7QWGmjMJGP48Luu2TxOPPoIm02vWFQt8q4SbwcTPHwmUvh1dcaswm_PWQ0PclXM-OeSewUdZh_OPsK8Z74SxCGAreKib4x7vGhiT5f9McisTLyp_evM28kB3l6qqynL0JX1CEIB_qeo_qwRP-yplXi6Ee6XQjT3YRHokjK44Mi6EcgIIraoHz5XSxvRPMt1C5EnJfRzDcG5l4Wpsa39GtT0JojKD7wnec2uewBskotcO9NwvnBs8XHIn8c9X0bo75tIFYI5IUFSgas9r-BEWQTC6PvjF_Xag3DLKEJAmIlKsGnKwPnmJadnFejLHPFOBRJfxkyFX664Y51t7BTw";
     }
 
 

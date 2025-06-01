@@ -7,14 +7,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "tournament-portals")
+@ConfigurationProperties(prefix = "bcp")
 public class WebConfiguration {
 
-    private String bcpListsUrl;
+    private String url;
 
     @Bean
-    @ConditionalOnProperty(name = "tournament-portals.bcp-lists-url")
+    @ConditionalOnProperty(name = "bcp.url")
     public BCPListsParser bcpListsParser() {
-        return new BCPListsParser(bcpListsUrl);
+        return new BCPListsParser(url);
     }
 }

@@ -2,8 +2,8 @@ spring:
   application:
     name: RostersParser
 
-tournament-portals:
-    bcp-lists-url: 'https://www.bestcoastpairings.com/play/list-search'
+bcp:
+  url: 'https://newprod-api.bestcoastpairings.com/v1/tournaments'
 
 storage:
   kusto-connection-string: 'dummy url'

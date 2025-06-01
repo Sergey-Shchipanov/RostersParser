@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 
 import java.time.LocalDateTime;
@@ -28,7 +29,7 @@ public class RostersParsingTask {
     }
 
     public void parseAndSaveRosters() {
-        List<BCPTournamentList> rosters = portalParser.parseRosters();
+        Flux<BCPTournamentList> rosters = portalParser.parseRosters();
         storage.saveLists(rosters);
     }
 

@@ -1,6 +1,7 @@
 package com.sshchipanov.parser.model;
 
 import lombok.Getter;
+import org.apache.logging.log4j.util.Strings;
 
 @Getter
 public enum Faction {
@@ -26,12 +27,22 @@ public enum Faction {
     THOUSAND_SONS("Thousand Sons"),
     TYRANIDS("Tyranids"),
     WORLD_EATERS("World Eaters"),
-    EMPERORS_CHILDREN("Emperor’s Children");
+    EMPERORS_CHILDREN("Emperor’s Children"),
+    UNKNOW(Strings.EMPTY);
 
     private final String displayName;
 
     Faction(String displayName) {
         this.displayName = displayName;
+    }
+
+    public static Faction valueOfDisplayName(String label) {
+        for (Faction faction : values()) {
+            if (faction.displayName.equals(label)) {
+                return faction;
+            }
+        }
+        return UNKNOW;
     }
 
 }

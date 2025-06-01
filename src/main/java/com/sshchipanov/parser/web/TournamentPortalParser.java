@@ -1,11 +1,10 @@
 package com.sshchipanov.parser.web;
 
 import com.sshchipanov.parser.model.BCPTournamentList;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 public interface TournamentPortalParser {
 
-    List<BCPTournamentList> parseRosters();
+    Flux<BCPTournamentList> parseRosters();
 
 }
