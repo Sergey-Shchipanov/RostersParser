@@ -35,10 +35,10 @@ public class BCPListsParser implements TournamentPortalParser {
                 })
                 .bodyToMono(BCPResponse.class);
 
-        return convertResponseToEntites(response);
+        return convertResponseToEntities(response);
     }
 
-    private static Flux<BCPTournamentList> convertResponseToEntites(Mono<BCPResponse> response) {
+    private static Flux<BCPTournamentList> convertResponseToEntities(Mono<BCPResponse> response) {
         return response.flatMapMany(bcpResponse -> Flux.fromIterable(bcpResponse.getData()))
                 .map(data -> new BCPTournamentList(Faction.valueOfDisplayName(data.getPlayer().getArmyName()),
                         data.getPlayer().firstName + " " + data.getPlayer().getLastName(),
