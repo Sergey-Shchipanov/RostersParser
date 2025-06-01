@@ -3,11 +3,15 @@ package com.sshchipanov.parser.web;
 import com.sshchipanov.parser.model.BCPTournamentList;
 import com.sshchipanov.parser.model.Faction;
 import com.sshchipanov.parser.model.bcp.BCPResponse;
+import com.sshchipanov.parser.model.bcp.Datum;
+import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @AllArgsConstructor
 @Slf4j
@@ -19,10 +23,10 @@ public class BCPListsParser implements TournamentPortalParser {
 
     @Override
     public Flux<BCPTournamentList> parseRosters() {
-        log.info("Starting to parse rosters from BCP at URL: {}", LISTS_URL_BASE);
+        log.info("Starting to parse rosters from BCP at URL: {}", StringUtils.isEmpty(bcpListsUrl) ? LIST_URL_BASE : bcpListsUrl);
         String authenticationToken = getAuthenticationToken();
         log.info("Generated authentication token: {}", authenticationToken);
-        WebClient webClient = WebClient.builder().baseUrl(LISTS_URL_BASE).build();
+        WebClient webClient = createWebClient(bcpListsUrl);
         Mono<BCPResponse> response = webClient.get().header("Authorization", "Bearer " + authenticationToken)
                 .attribute("limit", "100")
                 .attribute("startDate", "2025-05-24T21")
@@ -31,23 +35,38 @@ public class BCPListsParser implements TournamentPortalParser {
                 .retrieve()
                 .onStatus(status -> status.value() != 200, clientResponse -> {
                     log.error("Failed to retrieve data from BCP: {}", clientResponse.statusCode());
-                    return Mono.error(new RuntimeException("Failed to retrieve data from BCP"));
+                    return Mono.error(new IllegalStateException("Failed to retrieve data from BCP"));
                 })
                 .bodyToMono(BCPResponse.class);
 
         return convertResponseToEntities(response);
     }
 
-    private static Flux<BCPTournamentList> convertResponseToEntities(Mono<BCPResponse> response) {
-        return response.flatMapMany(bcpResponse -> Flux.fromIterable(bcpResponse.getData()))
-                .map(data -> new BCPTournamentList(Faction.valueOfDisplayName(data.getPlayer().getArmyName()),
-                        data.getPlayer().firstName + " " + data.getPlayer().getLastName(),
-                        LIST_URL_BASE + data.getPlayer().getArmyListObjectId(),
-                        data.getPlayer().getResultRecord(),
-                        data.getPlayer().getTotal_numWins(),
-                        data.getEventId()));
+    protected WebClient createWebClient(String bcpListsUrl) {
+        if (StringUtils.isEmpty(bcpListsUrl)) {
+            return WebClient.builder().baseUrl(LISTS_URL_BASE).build();
+        } else {
+            return WebClient.builder().baseUrl(bcpListsUrl).build();
+        }
+    }
 
+    protected Flux<BCPTournamentList> convertResponseToEntities(Mono<BCPResponse> response) {
+        return response
+                .flatMapMany(bcpResponse -> Flux.fromIterable(bcpResponse.getData()))
+                .map(this::mapDataToTournamentList);
+    }
 
+    protected BCPTournamentList mapDataToTournamentList(Datum data) {
+        log.info("Converted data: {}", data);
+        Faction faction = Faction.valueOfDisplayName(data.getPlayer().getArmyName());
+        String playerName = data.getPlayer().firstName + " " + data.getPlayer().getLastName();
+        String listUrl = LIST_URL_BASE + data.getPlayer().getArmyListObjectId();
+        List<Integer> resultRecord = data.getPlayer().getTotalResultRecord();
+        double numWins = data.getPlayer().getTotalNumWins();
+        String eventId = data.getEventId();
+        BCPTournamentList bcpTournamentList = new BCPTournamentList(faction, playerName, listUrl, resultRecord, numWins, eventId);
+        log.info("Converted data: {}", bcpTournamentList);
+        return bcpTournamentList;
     }
 
 
