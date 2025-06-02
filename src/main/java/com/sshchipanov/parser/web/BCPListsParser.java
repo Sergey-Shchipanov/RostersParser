@@ -7,6 +7,8 @@ import com.sshchipanov.parser.model.bcp.Datum;
 import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.unit.DataSize;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,7 +20,8 @@ import java.util.List;
 public class BCPListsParser implements TournamentPortalParser {
 
     public static final String LIST_URL_BASE = "https://www.bestcoastpairings.com/list/";
-    public static final String LISTS_URL_BASE = "https://newprod-api.bestcoastpairings.com/v1/tournaments";
+    //    public static final String LISTS_URL_BASE = "https://newprod-api.bestcoastpairings.com/v1/tournaments";
+    public static final String LISTS_URL_BASE = "https://rostersparser.free.beeceptor.com/lists";
     private String bcpListsUrl;
 
     @Override
@@ -43,11 +46,12 @@ public class BCPListsParser implements TournamentPortalParser {
     }
 
     protected WebClient createWebClient(String bcpListsUrl) {
-        if (StringUtils.isEmpty(bcpListsUrl)) {
-            return WebClient.builder().baseUrl(LISTS_URL_BASE).build();
-        } else {
-            return WebClient.builder().baseUrl(bcpListsUrl).build();
-        }
+        final int size = (int) DataSize.ofMegabytes(16).toBytes();
+        final ExchangeStrategies strategies = ExchangeStrategies.builder()
+                .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size))
+                .build();
+        return WebClient.builder().baseUrl(StringUtils.isEmpty(bcpListsUrl) ? LISTS_URL_BASE : bcpListsUrl).exchangeStrategies(strategies).build();
+
     }
 
     protected Flux<BCPTournamentList> convertResponseToEntities(Mono<BCPResponse> response) {
